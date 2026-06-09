@@ -1,0 +1,75 @@
+<!-- src/app/app.component.html -->
+<!-- Shell de la aplicacion: header + router-outlet + barra de navegacion inferior. -->
+<!-- La barra inferior solo se muestra cuando el usuario esta autenticado. -->
+
+<!-- Header global -->
+<mat-toolbar class="app-header" color="primary" role="banner">
+
+  <!-- Logo + nombre -->
+  <div class="app-header__brand" aria-label="PitaSmart">
+    <mat-icon class="app-header__logo" aria-hidden="true">eco</mat-icon>
+    <span class="app-header__nombre">PitaSmart</span>
+  </div>
+
+  <span class="app-header__espaciador" aria-hidden="true"></span>
+
+  <!-- Indicador de conectividad -->
+  <div
+    class="app-header__conectividad"
+    [class.app-header__conectividad--online]="isOnline()"
+    [class.app-header__conectividad--offline]="!isOnline()"
+    [attr.aria-label]="isOnline() ? 'Conectado al servidor' : 'Sin conexion a internet'"
+    role="status"
+  >
+    <span class="app-header__conectividad-dot" aria-hidden="true"></span>
+    <span class="app-header__conectividad-texto">
+      {{ isOnline() ? 'En linea' : 'Sin conexion' }}
+    </span>
+  </div>
+
+  <!-- Badge de operaciones pendientes de sync -->
+  @if (hasPending() && isAuthenticated()) {
+    <button
+      mat-icon-button
+      class="app-header__sync-btn"
+      [matBadge]="pendingCount()"
+      matBadgeColor="warn"
+      matBadgeSize="small"
+      (click)="syncService.sincronizar()"
+      [disabled]="!isOnline()"
+      aria-label="Sincronizar operaciones pendientes"
+    >
+      <mat-icon>sync</mat-icon>
+    </button>
+  }
+
+</mat-toolbar>
+
+<!-- Banner de modo offline (se auto-muestra via OfflineBannerComponent) -->
+<app-offline-banner />
+
+<!-- Contenido principal con espacio para la barra inferior -->
+<main
+  class="app-contenido"
+  [class.app-contenido--con-nav]="isAuthenticated()"
+  role="main"
+>
+  <router-outlet />
+</main>
+
+<!-- Barra de navegacion inferior (solo para usuarios autenticados) -->
+@if (isAuthenticated()) {
+  <nav class="app-nav-bottom" role="navigation" aria-label="Navegacion principal">
+    @for (item of navItems; track item.ruta) {
+      <a
+        [routerLink]="item.ruta"
+        routerLinkActive="app-nav-bottom__item--activo"
+        class="app-nav-bottom__item"
+        [attr.aria-label]="item.etiqueta"
+      >
+        <mat-icon class="app-nav-bottom__icono" aria-hidden="true">{{ item.icono }}</mat-icon>
+        <span class="app-nav-bottom__etiqueta">{{ item.etiqueta }}</span>
+      </a>
+    }
+  </nav>
+}

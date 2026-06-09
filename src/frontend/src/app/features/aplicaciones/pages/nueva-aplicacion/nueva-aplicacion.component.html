@@ -1,0 +1,336 @@
+<!-- src/app/features/aplicaciones/pages/nueva-aplicacion/nueva-aplicacion.component.html -->
+<!-- Formulario de registro de aplicacion de quimicos. Mobile-first, botones grandes para uso en campo. -->
+
+<!-- Banner de modo offline -->
+<app-offline-banner />
+
+<div class="nueva-aplicacion__container">
+
+  <!-- Header con estado de sync -->
+  <div class="nueva-aplicacion__header">
+    <button mat-icon-button (click)="cancelar()" aria-label="Volver">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="nueva-aplicacion__titulo">Registrar Aplicacion</h1>
+    <app-sync-status-badge />
+  </div>
+
+  <!-- Badge de modo offline -->
+  @if (modoOffline()) {
+    <div class="nueva-aplicacion__offline-badge" role="status" aria-live="polite">
+      <mat-icon aria-hidden="true">cloud_off</mat-icon>
+      <span>Modo sin conexion. Los datos se guardaran localmente.</span>
+    </div>
+  }
+
+  <!-- Estado de carga de datos maestros -->
+  @if (cargandoDatos()) {
+    <div class="nueva-aplicacion__loading" role="status" aria-label="Cargando datos">
+      <mat-spinner diameter="40" />
+      <p>Cargando lotes e insumos...</p>
+    </div>
+  } @else {
+
+    <!-- Formulario principal -->
+    <form
+      [formGroup]="form"
+      (ngSubmit)="guardar()"
+      class="nueva-aplicacion__form"
+      novalidate
+    >
+
+      <!-- SECCION: Lote e Insumo -->
+      <mat-card class="nueva-aplicacion__seccion">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon aria-hidden="true">grass</mat-icon>
+            Lote e Insumo
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+
+          <!-- Selector de Lote -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Lote</mat-label>
+            <mat-select
+              formControlName="loteId"
+              aria-label="Seleccionar lote"
+              required
+            >
+              @for (lote of lotes(); track lote.id) {
+                <mat-option [value]="lote.id">
+                  {{ lote.nombre }} — {{ lote.cultivo }} ({{ lote.areaHa }} ha)
+                </mat-option>
+              }
+            </mat-select>
+            @if (form.get('loteId')?.hasError('required') && form.get('loteId')?.touched) {
+              <mat-error>Debe seleccionar un lote</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Alerta de periodo de carencia -->
+          @if (alertaCarencia().activa) {
+            <div
+              class="nueva-aplicacion__alerta-carencia"
+              role="alert"
+              aria-live="assertive"
+            >
+              <mat-icon aria-hidden="true">warning</mat-icon>
+              <div>
+                <strong>Periodo de Carencia Activo</strong>
+                <p>{{ alertaCarencia().mensaje }}</p>
+                @if (alertaCarencia().fechaFin) {
+                  <p class="nueva-aplicacion__alerta-fecha">
+                    Liberacion: {{ alertaCarencia().fechaFin | date:'dd/MM/yyyy HH:mm' }}
+                  </p>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Selector de Insumo -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Insumo Agroquimico</mat-label>
+            <mat-select
+              formControlName="insumoId"
+              aria-label="Seleccionar insumo"
+              required
+            >
+              @for (insumo of insumos(); track insumo.id) {
+                <mat-option [value]="insumo.id">
+                  {{ insumo.nombreComercial }}
+                  <span class="nueva-aplicacion__insumo-meta">
+                    — {{ insumo.tipoProducto }} | {{ insumo.diasCarencia }}d carencia
+                  </span>
+                </mat-option>
+              }
+            </mat-select>
+            @if (form.get('insumoId')?.hasError('required') && form.get('insumoId')?.touched) {
+              <mat-error>Debe seleccionar un insumo</mat-error>
+            }
+          </mat-form-field>
+
+        </mat-card-content>
+      </mat-card>
+
+      <!-- SECCION: Fecha y Area -->
+      <mat-card class="nueva-aplicacion__seccion">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon aria-hidden="true">event</mat-icon>
+            Fecha y Aplicacion
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+
+          <!-- Fecha de Aplicacion -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Fecha de Aplicacion</mat-label>
+            <input
+              matInput
+              [matDatepicker]="pickerFecha"
+              formControlName="fechaAplicacion"
+              [max]="fechaMaxima"
+              [min]="fechaMinima"
+              aria-label="Fecha de aplicacion"
+              required
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="pickerFecha" />
+            <mat-datepicker #pickerFecha />
+            @if (form.get('fechaAplicacion')?.invalid && form.get('fechaAplicacion')?.touched) {
+              <mat-error>Fecha invalida. Max: hoy. Min: 30 dias atras.</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Area Aplicada -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Area Aplicada</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="areaAplicadaHa"
+              min="0.001"
+              step="0.1"
+              aria-label="Area aplicada en hectareas"
+              required
+            />
+            <span matSuffix>ha</span>
+            @if (form.get('areaAplicadaHa')?.hasError('required') && form.get('areaAplicadaHa')?.touched) {
+              <mat-error>El area es requerida</mat-error>
+            }
+            @if (form.get('areaAplicadaHa')?.hasError('min')) {
+              <mat-error>El area debe ser mayor a 0</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Metodo de Aplicacion -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Metodo de Aplicacion</mat-label>
+            <mat-select formControlName="metodoAplicacion" required>
+              @for (metodo of metodosAplicacion; track metodo.valor) {
+                <mat-option [value]="metodo.valor">{{ metodo.etiqueta }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+        </mat-card-content>
+      </mat-card>
+
+      <!-- SECCION: Dosis -->
+      <mat-card class="nueva-aplicacion__seccion">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon aria-hidden="true">science</mat-icon>
+            Dosis
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="nueva-aplicacion__dosis-row">
+
+          <!-- Cantidad de dosis -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo nueva-aplicacion__campo--dosis">
+            <mat-label>Cantidad</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="dosisCantidad"
+              min="0.001"
+              step="0.1"
+              aria-label="Cantidad de dosis"
+              required
+            />
+            @if (form.get('dosisCantidad')?.hasError('min')) {
+              <mat-error>La dosis debe ser mayor a 0</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Unidad de dosis -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo nueva-aplicacion__campo--unidad">
+            <mat-label>Unidad</mat-label>
+            <mat-select formControlName="dosisUnidad" required>
+              @for (unidad of unidadesDosis; track unidad.valor) {
+                <mat-option [value]="unidad.valor">{{ unidad.etiqueta }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+        </mat-card-content>
+      </mat-card>
+
+      <!-- SECCION: Operador y Costo -->
+      <mat-card class="nueva-aplicacion__seccion">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon aria-hidden="true">person</mat-icon>
+            Operador y Costo
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+
+          <!-- Nombre del operador -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Nombre del Operador</mat-label>
+            <input
+              matInput
+              formControlName="operadorNombre"
+              maxlength="200"
+              aria-label="Nombre del operador"
+              required
+            />
+            @if (form.get('operadorNombre')?.hasError('required') && form.get('operadorNombre')?.touched) {
+              <mat-error>El nombre del operador es requerido</mat-error>
+            }
+            @if (form.get('operadorNombre')?.hasError('minlength')) {
+              <mat-error>Minimo 2 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Costo total -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Costo Total (USD)</mat-label>
+            <span matPrefix>$&nbsp;</span>
+            <input
+              matInput
+              type="number"
+              formControlName="costoTotal"
+              min="0"
+              step="0.01"
+              aria-label="Costo total en USD"
+            />
+            @if (form.get('costoTotal')?.hasError('min')) {
+              <mat-error>El costo no puede ser negativo</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Observaciones -->
+          <mat-form-field appearance="outline" class="nueva-aplicacion__campo">
+            <mat-label>Observaciones</mat-label>
+            <textarea
+              matInput
+              formControlName="observaciones"
+              rows="3"
+              maxlength="1000"
+              aria-label="Observaciones adicionales"
+              placeholder="Ej: Aplicacion preventiva por presencia de sigatoka..."
+            ></textarea>
+            <mat-hint align="end">{{ form.get('observaciones')?.value?.length ?? 0 }}/1000</mat-hint>
+          </mat-form-field>
+
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Error de guardado -->
+      @if (estadoGuardado().error) {
+        <div class="nueva-aplicacion__error" role="alert" aria-live="assertive">
+          <mat-icon aria-hidden="true">error</mat-icon>
+          <span>{{ estadoGuardado().error }}</span>
+        </div>
+      }
+
+      <!-- Botones de accion (grandes para uso en campo) -->
+      <div class="nueva-aplicacion__acciones">
+
+        <!-- Indicador de pendientes sync en el boton -->
+        @if (modoOffline()) {
+          <mat-chip class="nueva-aplicacion__chip-offline" aria-label="Pendiente de sincronizacion">
+            <mat-icon matChipTrailingIcon aria-hidden="true">cloud_queue</mat-icon>
+            PENDIENTE SYNC
+          </mat-chip>
+        }
+
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="cancelar()"
+          class="nueva-aplicacion__btn nueva-aplicacion__btn--cancelar"
+          [disabled]="estadoGuardado().guardando"
+          aria-label="Cancelar registro"
+        >
+          Cancelar
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="nueva-aplicacion__btn nueva-aplicacion__btn--guardar"
+          [disabled]="estadoGuardado().guardando"
+          aria-label="Guardar aplicacion"
+        >
+          @if (estadoGuardado().guardando) {
+            <mat-spinner diameter="20" />
+          } @else {
+            <mat-icon aria-hidden="true">save</mat-icon>
+          }
+          @if (modoOffline()) {
+            Guardar (Offline)
+          } @else {
+            Guardar Aplicacion
+          }
+        </button>
+
+      </div>
+
+    </form>
+  }
+
+</div>

@@ -1,0 +1,402 @@
+<!-- src/app/features/dashboard/dashboard.component.html -->
+<!-- Dashboard de Rentabilidad. Mobile-first con Angular Material. -->
+
+<!-- Banner de modo offline -->
+<app-offline-banner />
+
+<div class="dashboard__container">
+
+  <!-- Header -->
+  <div class="dashboard__header">
+    <div class="dashboard__header-text">
+      <h1 class="dashboard__titulo">Rentabilidad</h1>
+      <p class="dashboard__subtitulo">Analisis financiero por lote</p>
+    </div>
+
+    <div class="dashboard__header-acciones">
+      <!-- Indicador de sync con badge de cantidad pendiente -->
+      @if (hayPendientes()) {
+        <button
+          mat-icon-button
+          [matBadge]="pendientesSyncCount()"
+          matBadgeColor="warn"
+          (click)="sincronizarAhora()"
+          [disabled]="modoOffline() || estadoSync() === 'syncing'"
+          aria-label="Sincronizar operaciones pendientes"
+          matTooltip="Sincronizar datos pendientes"
+        >
+          @if (estadoSync() === 'syncing') {
+            <mat-spinner diameter="24" />
+          } @else {
+            <mat-icon>sync</mat-icon>
+          }
+        </button>
+      }
+
+      <app-sync-status-badge />
+    </div>
+  </div>
+
+  <!-- Indicador de modo offline con calculo aproximado -->
+  @if (modoOffline()) {
+    <div class="dashboard__offline-notice" role="status" aria-live="polite">
+      <mat-icon aria-hidden="true">cloud_off</mat-icon>
+      <span>
+        Modo sin conexion. Mostrando datos locales.
+        @if (rentabilidad()?.esCalculoOffline) {
+          Los ingresos pueden estar incompletos.
+        }
+      </span>
+    </div>
+  }
+
+  <!-- Selector de Lote y Periodo -->
+  <mat-card class="dashboard__filtros">
+    <mat-card-content>
+      <div class="dashboard__filtros-row">
+
+        <!-- Selector de lote -->
+        <mat-form-field appearance="outline" class="dashboard__selector-lote">
+          <mat-label>Lote</mat-label>
+          <mat-select
+            [value]="loteSeleccionado()?.id"
+            (selectionChange)="onLoteChange($event.value)"
+            aria-label="Seleccionar lote para analizar"
+          >
+            @for (lote of lotes(); track lote.id) {
+              <mat-option [value]="lote.id">
+                {{ lote.nombre }} — {{ lote.cultivo }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Alertas criticas de carencia -->
+  @if (alertasCriticas().length > 0) {
+    <div class="dashboard__alertas" role="alert" aria-live="assertive">
+      @for (alerta of alertasCriticas(); track alerta.tipo) {
+        <div class="dashboard__alerta dashboard__alerta--critica">
+          <mat-icon aria-hidden="true">block</mat-icon>
+          <span>{{ alerta.mensaje }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Contenido principal -->
+  @switch (estadoCarga()) {
+
+    <!-- Estado: cargando -->
+    @case ('cargando') {
+      <div class="dashboard__loading" role="status" aria-label="Cargando datos de rentabilidad">
+        <mat-spinner diameter="48" />
+        <p>Calculando rentabilidad...</p>
+      </div>
+    }
+
+    <!-- Estado: error -->
+    @case ('error') {
+      <div class="dashboard__error" role="alert">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <div>
+          <strong>No se pudieron cargar los datos</strong>
+          <p>{{ errorMensaje() }}</p>
+          @if (modoOffline()) {
+            <p>Mostrando datos disponibles localmente.</p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Estado: sin datos -->
+    @case ('vacio') {
+      <div class="dashboard__vacio">
+        <mat-icon aria-hidden="true">agriculture</mat-icon>
+        <h2>Sin datos de rentabilidad</h2>
+        <p>Aun no hay costos ni ingresos registrados para este lote en el periodo seleccionado.</p>
+      </div>
+    }
+
+    <!-- Estado inicial (sin lote seleccionado) -->
+    @case ('inicial') {
+      <div class="dashboard__vacio">
+        <mat-icon aria-hidden="true">bar_chart</mat-icon>
+        <h2>Selecciona un lote</h2>
+        <p>Elige un lote para ver su analisis de rentabilidad.</p>
+      </div>
+    }
+
+    <!-- Estado: exito - mostrar KPIs y tabla -->
+    @case ('exito') {
+
+      @if (rentabilidad(); as kpis) {
+
+        <!-- Badge de calculo offline -->
+        @if (kpis.esCalculoOffline) {
+          <mat-chip-set class="dashboard__offline-chip-set">
+            <mat-chip class="dashboard__chip-offline">
+              <mat-icon matChipLeadingIcon aria-hidden="true">cloud_off</mat-icon>
+              Datos aproximados (offline)
+            </mat-chip>
+          </mat-chip-set>
+        }
+
+        <!-- Cards KPI -->
+        <div class="dashboard__kpis" role="region" aria-label="Indicadores de rentabilidad">
+
+          <!-- KPI: Ingresos Totales -->
+          <mat-card class="dashboard__kpi-card dashboard__kpi-card--ingresos">
+            <mat-card-content>
+              <div class="dashboard__kpi-icono" aria-hidden="true">
+                <mat-icon>trending_up</mat-icon>
+              </div>
+              <div class="dashboard__kpi-datos">
+                <span class="dashboard__kpi-etiqueta">Ingresos</span>
+                <span class="dashboard__kpi-valor">
+                  {{ kpis.totalIngresos | currency:'USD':'symbol':'1.2-2' }}
+                </span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- KPI: Costos Totales -->
+          <mat-card class="dashboard__kpi-card dashboard__kpi-card--costos">
+            <mat-card-content>
+              <div class="dashboard__kpi-icono" aria-hidden="true">
+                <mat-icon>trending_down</mat-icon>
+              </div>
+              <div class="dashboard__kpi-datos">
+                <span class="dashboard__kpi-etiqueta">Costos</span>
+                <span class="dashboard__kpi-valor">
+                  {{ kpis.totalCostos | currency:'USD':'symbol':'1.2-2' }}
+                </span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- KPI: Utilidad Bruta -->
+          <mat-card
+            class="dashboard__kpi-card"
+            [class.dashboard__kpi-card--positivo]="kpis.utilidadBruta >= 0"
+            [class.dashboard__kpi-card--negativo]="kpis.utilidadBruta < 0"
+          >
+            <mat-card-content>
+              <div class="dashboard__kpi-icono" aria-hidden="true">
+                <mat-icon>{{ kpis.utilidadBruta >= 0 ? 'thumb_up' : 'thumb_down' }}</mat-icon>
+              </div>
+              <div class="dashboard__kpi-datos">
+                <span class="dashboard__kpi-etiqueta">Utilidad Bruta</span>
+                <span class="dashboard__kpi-valor">
+                  {{ kpis.utilidadBruta | currency:'USD':'symbol':'1.2-2' }}
+                </span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- KPI: Margen % -->
+          <mat-card class="dashboard__kpi-card">
+            <mat-card-content>
+              <div class="dashboard__kpi-icono" aria-hidden="true">
+                <mat-icon>percent</mat-icon>
+              </div>
+              <div class="dashboard__kpi-datos">
+                <span class="dashboard__kpi-etiqueta">Margen</span>
+                <span class="dashboard__kpi-valor">
+                  @if (kpis.margenBruto !== null) {
+                    {{ kpis.margenBruto | number:'1.1-1' }}%
+                  } @else {
+                    N/A
+                  }
+                </span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- KPI: ROI -->
+          <mat-card class="dashboard__kpi-card">
+            <mat-card-content>
+              <div class="dashboard__kpi-icono" aria-hidden="true">
+                <mat-icon>show_chart</mat-icon>
+              </div>
+              <div class="dashboard__kpi-datos">
+                <span class="dashboard__kpi-etiqueta">ROI</span>
+                <span class="dashboard__kpi-valor">
+                  @if (kpis.roi !== null) {
+                    {{ kpis.roi | number:'1.1-1' }}%
+                  } @else {
+                    N/A
+                  }
+                </span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- KPI: Utilidad por Ha -->
+          <mat-card class="dashboard__kpi-card">
+            <mat-card-content>
+              <div class="dashboard__kpi-icono" aria-hidden="true">
+                <mat-icon>landscape</mat-icon>
+              </div>
+              <div class="dashboard__kpi-datos">
+                <span class="dashboard__kpi-etiqueta">Utilidad/Ha</span>
+                <span class="dashboard__kpi-valor">
+                  @if (kpis.utilidadPorHa !== null) {
+                    {{ kpis.utilidadPorHa | currency:'USD':'symbol':'1.2-2' }}
+                  } @else {
+                    N/A
+                  }
+                </span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+        </div>
+
+        <!-- Indicador de operaciones pendientes de sync -->
+        @if (hayPendientes()) {
+          <div class="dashboard__sync-pendiente" role="status" aria-live="polite">
+            <mat-icon aria-hidden="true">pending</mat-icon>
+            <span>
+              {{ pendientesSyncCount() }} operacion(es) pendiente(s) de sincronizar.
+              @if (!modoOffline()) {
+                <button mat-button color="primary" (click)="sincronizarAhora()">
+                  Sincronizar ahora
+                </button>
+              }
+            </span>
+          </div>
+        }
+
+      }
+
+      <!-- Tabla de ultimas aplicaciones -->
+      @if (ultimasAplicaciones().length > 0) {
+        <mat-card class="dashboard__tabla-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon aria-hidden="true">science</mat-icon>
+              Ultimas Aplicaciones
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+            <div class="dashboard__tabla-scroll" role="region" aria-label="Tabla de ultimas aplicaciones">
+              <table
+                mat-table
+                [dataSource]="ultimasAplicaciones()"
+                class="dashboard__tabla"
+                aria-label="Ultimas aplicaciones de quimicos"
+              >
+
+                <!-- Columna: Insumo -->
+                <ng-container matColumnDef="insumoNombre">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Insumo</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.insumoNombre ?? 'N/A' }}
+                  </td>
+                </ng-container>
+
+                <!-- Columna: Fecha -->
+                <ng-container matColumnDef="fechaAplicacion">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Fecha</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.fechaAplicacion | date:'dd/MM/yyyy' }}
+                  </td>
+                </ng-container>
+
+                <!-- Columna: Area -->
+                <ng-container matColumnDef="areaHa">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Area (ha)</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.areaAplicadaHa | number:'1.1-2' }}
+                  </td>
+                </ng-container>
+
+                <!-- Columna: Costo -->
+                <ng-container matColumnDef="costoTotal">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Costo</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.costoTotal | currency:'USD':'symbol':'1.2-2' }}
+                  </td>
+                </ng-container>
+
+                <!-- Columna: Estado de Carencia -->
+                <ng-container matColumnDef="carencia">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Periodo de Carencia</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span
+                      [class]="'dashboard__carencia ' + claseCarencia(row)"
+                      [attr.aria-label]="estadoCarenciaAplicacion(row)"
+                    >
+                      {{ estadoCarenciaAplicacion(row) }}
+                    </span>
+                  </td>
+                </ng-container>
+
+                <!-- Columna: Estado de Sync -->
+                <ng-container matColumnDef="sync">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Sync</th>
+                  <td mat-cell *matCellDef="let row">
+                    @switch (row.syncStatus) {
+                      @case ('PENDIENTE') {
+                        <mat-icon
+                          class="dashboard__sync-icon dashboard__sync-icon--pendiente"
+                          aria-label="Pendiente de sincronizar"
+                          matTooltip="Pendiente de sincronizar"
+                        >cloud_queue</mat-icon>
+                      }
+                      @case ('ENVIANDO') {
+                        <mat-spinner diameter="16" aria-label="Sincronizando" />
+                      }
+                      @case ('SYNCED') {
+                        <mat-icon
+                          class="dashboard__sync-icon dashboard__sync-icon--synced"
+                          aria-label="Sincronizado"
+                          matTooltip="Sincronizado"
+                        >cloud_done</mat-icon>
+                      }
+                      @case ('CONFLICTO') {
+                        <mat-icon
+                          class="dashboard__sync-icon dashboard__sync-icon--conflicto"
+                          aria-label="Conflicto de sincronizacion"
+                          matTooltip="Conflicto - requiere revision"
+                        >warning</mat-icon>
+                      }
+                      @case ('RECHAZADO') {
+                        <mat-icon
+                          class="dashboard__sync-icon dashboard__sync-icon--rechazado"
+                          aria-label="Rechazado por el servidor"
+                          matTooltip="Rechazado por el servidor"
+                        >error</mat-icon>
+                      }
+                      @default {
+                        <mat-icon aria-hidden="true" class="dashboard__sync-icon">help_outline</mat-icon>
+                      }
+                    }
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columnasTabla; sticky: true"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasTabla;"></tr>
+
+              </table>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <div class="dashboard__sin-aplicaciones">
+          <mat-icon aria-hidden="true">science</mat-icon>
+          <p>No hay aplicaciones registradas para este lote.</p>
+        </div>
+      }
+
+    } <!-- @case exito -->
+
+  } <!-- @switch estadoCarga -->
+
+</div>

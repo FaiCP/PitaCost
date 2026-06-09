@@ -1,0 +1,271 @@
+<!-- src/app/features/cosechas/pages/nueva-cosecha/nueva-cosecha.component.html -->
+<!-- Registro de cosecha con validacion de periodo de carencia offline.
+     La alerta de carencia es advertencia visual, no bloqueo total.
+     Badge OFFLINE en el boton guardar cuando sin conexion. -->
+
+<div class="nueva-cosecha-container">
+
+  <!-- Banner offline global -->
+  <app-offline-banner></app-offline-banner>
+
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon aria-hidden="true">grass</mat-icon>
+        Registrar Cosecha
+      </mat-card-title>
+      <mat-card-subtitle>
+        @if (modoOffline()) {
+          <span class="badge-offline" role="status" aria-label="Modo sin conexion">
+            <mat-icon class="badge-offline__icon" aria-hidden="true">cloud_off</mat-icon>
+            OFFLINE
+          </span>
+        }
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      @if (cargandoDatos()) {
+        <!-- Estado de carga de datos maestros -->
+        <div class="loading-state" role="status" aria-label="Cargando datos">
+          <mat-spinner diameter="32" aria-hidden="true"></mat-spinner>
+          <span>Cargando lotes...</span>
+        </div>
+      } @else {
+
+        <form
+          [formGroup]="form"
+          (ngSubmit)="guardar()"
+          novalidate
+          aria-label="Formulario de registro de cosecha"
+        >
+
+          <!-- ---------------------------------------------------------------- -->
+          <!-- Alerta de carencia activa                                         -->
+          <!-- ---------------------------------------------------------------- -->
+          @if (alertaCarencia()) {
+            <div
+              class="alerta-carencia"
+              role="alert"
+              aria-live="assertive"
+              aria-label="Advertencia de periodo de carencia activo"
+            >
+              <div class="alerta-carencia__header">
+                <mat-icon class="alerta-carencia__icon" aria-hidden="true">warning</mat-icon>
+                <strong>ADVERTENCIA: Periodo de carencia activo</strong>
+              </div>
+              <p class="alerta-carencia__detalle">
+                El insumo <strong>{{ alertaCarencia()!.insumoNombre }}</strong>
+                tiene carencia activa hasta el
+                <strong>{{ alertaCarencia()!.fechaFinCarencia | date:'dd/MM/yyyy' }}</strong>
+                ({{ alertaCarencia()!.diasRestantes }} dia(s) restantes).
+              </p>
+              <p class="alerta-carencia__nota">
+                <mat-icon aria-hidden="true">info</mat-icon>
+                El servidor validara esta cosecha segun la norma Agrocalidad.
+                Puede continuar pero la cosecha podria ser rechazada.
+              </p>
+            </div>
+          }
+
+          <!-- ---------------------------------------------------------------- -->
+          <!-- Campos del formulario                                             -->
+          <!-- ---------------------------------------------------------------- -->
+
+          <!-- Lote -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Lote</mat-label>
+            <mat-select
+              formControlName="loteId"
+              aria-required="true"
+            >
+              @for (lote of lotes(); track lote.id) {
+                <mat-option [value]="lote.id">
+                  {{ lote.nombre }} — {{ lote.cultivo }} ({{ lote.areaHa }} ha)
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix aria-hidden="true">map</mat-icon>
+            @if (form.controls['loteId'].hasError('required') && form.controls['loteId'].touched) {
+              <mat-error>Seleccione un lote</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Fecha de cosecha -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Fecha de cosecha</mat-label>
+            <input
+              matInput
+              [matDatepicker]="pickerFecha"
+              formControlName="fechaCosecha"
+              [max]="fechaMaxima"
+              readonly
+              aria-required="true"
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="pickerFecha"
+              aria-label="Seleccionar fecha"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #pickerFecha></mat-datepicker>
+            @if (form.controls['fechaCosecha'].hasError('required') && form.controls['fechaCosecha'].touched) {
+              <mat-error>La fecha es obligatoria</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Peso total -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Peso total cosechado (kg)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="pesoTotalKg"
+              min="0.001"
+              step="0.1"
+              inputmode="decimal"
+              aria-required="true"
+            />
+            <span matSuffix>kg</span>
+            <mat-icon matPrefix aria-hidden="true">scale</mat-icon>
+            @if (form.controls['pesoTotalKg'].hasError('required') && form.controls['pesoTotalKg'].touched) {
+              <mat-error>El peso es obligatorio</mat-error>
+            }
+            @if (form.controls['pesoTotalKg'].hasError('min') && form.controls['pesoTotalKg'].touched) {
+              <mat-error>El peso debe ser mayor a cero</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Calidad -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Calidad de cosecha</mat-label>
+            <mat-select
+              formControlName="calidad"
+              aria-required="true"
+            >
+              @for (opcion of opcionesCalidad; track opcion.valor) {
+                <mat-option [value]="opcion.valor">{{ opcion.etiqueta }}</mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix aria-hidden="true">grade</mat-icon>
+            @if (form.controls['calidad'].hasError('required') && form.controls['calidad'].touched) {
+              <mat-error>Seleccione la calidad</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Precio de venta por kg (opcional) -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Precio de venta por kg (USD)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="precioVentaKg"
+              min="0"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Opcional"
+            />
+            <span matPrefix>$</span>
+            <span matSuffix>/kg</span>
+            @if (form.controls['precioVentaKg'].hasError('min') && form.controls['precioVentaKg'].touched) {
+              <mat-error>El precio no puede ser negativo</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Ingreso estimado (computed reactivo) -->
+          @if (ingresoEstimado() !== null) {
+            <div class="ingreso-estimado" role="status" aria-label="Ingreso estimado calculado">
+              <mat-icon aria-hidden="true">monetization_on</mat-icon>
+              <span>Ingreso estimado: <strong>$ {{ ingresoEstimado() | number:'1.2-2' }}</strong></span>
+            </div>
+          }
+
+          <!-- Comprador (opcional) -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Comprador</mat-label>
+            <input
+              matInput
+              type="text"
+              formControlName="comprador"
+              placeholder="Nombre del comprador (opcional)"
+              maxlength="200"
+            />
+            <mat-icon matPrefix aria-hidden="true">person</mat-icon>
+            @if (form.controls['comprador'].hasError('maxlength')) {
+              <mat-error>Maximo 200 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Observaciones -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Observaciones</mat-label>
+            <textarea
+              matInput
+              formControlName="observaciones"
+              rows="3"
+              placeholder="Condiciones del campo, novedades, etc. (opcional)"
+              maxlength="1000"
+            ></textarea>
+            <mat-icon matPrefix aria-hidden="true">notes</mat-icon>
+            @if (form.controls['observaciones'].hasError('maxlength')) {
+              <mat-error>Maximo 1000 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Mensaje de error de guardado -->
+          @if (estadoGuardado().error) {
+            <div class="error-guardado" role="alert">
+              <mat-icon aria-hidden="true">error_outline</mat-icon>
+              <span>{{ estadoGuardado().error }}</span>
+            </div>
+          }
+
+          <!-- ---------------------------------------------------------------- -->
+          <!-- Botones de accion                                                 -->
+          <!-- ---------------------------------------------------------------- -->
+          <div class="acciones-formulario">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              class="btn-guardar"
+              [disabled]="estadoGuardado().guardando"
+              [attr.aria-label]="modoOffline() ? 'Guardar cosecha en modo offline' : 'Guardar cosecha'"
+            >
+              @if (estadoGuardado().guardando) {
+                <mat-spinner diameter="20" aria-hidden="true"></mat-spinner>
+                <span>Guardando...</span>
+              } @else if (modoOffline()) {
+                <ng-container>
+                  <mat-icon aria-hidden="true">cloud_off</mat-icon>
+                  <span>Guardar</span>
+                  <span class="badge-offline-btn" aria-hidden="true">OFFLINE</span>
+                </ng-container>
+              } @else {
+                <ng-container>
+                  <mat-icon aria-hidden="true">save</mat-icon>
+                  <span>Guardar Cosecha</span>
+                </ng-container>
+              }
+            </button>
+
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-cancelar"
+              (click)="cancelar()"
+              [disabled]="estadoGuardado().guardando"
+              aria-label="Cancelar y volver a la lista"
+            >
+              <mat-icon aria-hidden="true">arrow_back</mat-icon>
+              Cancelar
+            </button>
+          </div>
+
+        </form>
+
+      }
+    </mat-card-content>
+  </mat-card>
+
+</div>

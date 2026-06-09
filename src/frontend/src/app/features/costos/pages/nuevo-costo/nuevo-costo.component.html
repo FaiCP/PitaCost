@@ -1,0 +1,199 @@
+<!-- src/app/features/costos/pages/nuevo-costo/nuevo-costo.component.html -->
+<!-- Registro de costos por lote. Soporte offline con badge OFFLINE en boton. -->
+
+<div class="nuevo-costo-container">
+
+  <app-offline-banner></app-offline-banner>
+
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon aria-hidden="true">receipt_long</mat-icon>
+        Registrar Costo
+      </mat-card-title>
+      <mat-card-subtitle>
+        @if (modoOffline()) {
+          <span class="badge-offline" role="status" aria-label="Modo sin conexion">
+            <mat-icon class="badge-offline__icon" aria-hidden="true">cloud_off</mat-icon>
+            OFFLINE
+          </span>
+        }
+        @if (pendientesSync() > 0) {
+          <span class="badge-pendientes" [attr.aria-label]="pendientesSync() + ' operaciones pendientes de sincronizar'">
+            {{ pendientesSync() }} pendiente(s)
+          </span>
+        }
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      @if (cargandoDatos()) {
+        <div class="loading-state" role="status" aria-label="Cargando datos">
+          <mat-spinner diameter="32" aria-hidden="true"></mat-spinner>
+          <span>Cargando lotes...</span>
+        </div>
+      } @else {
+
+        <form
+          [formGroup]="form"
+          (ngSubmit)="guardar()"
+          novalidate
+          aria-label="Formulario de registro de costo"
+        >
+
+          <!-- Lote -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Lote</mat-label>
+            <mat-select formControlName="loteId" aria-required="true">
+              @for (lote of lotes(); track lote.id) {
+                <mat-option [value]="lote.id">
+                  {{ lote.nombre }} — {{ lote.cultivo }} ({{ lote.areaHa }} ha)
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix aria-hidden="true">map</mat-icon>
+            @if (form.controls['loteId'].hasError('required') && form.controls['loteId'].touched) {
+              <mat-error>Seleccione un lote</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Fecha -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Fecha del costo</mat-label>
+            <input
+              matInput
+              [matDatepicker]="pickerFecha"
+              formControlName="fecha"
+              [max]="fechaMaxima"
+              [min]="fechaMinima"
+              readonly
+              aria-required="true"
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="pickerFecha"
+              aria-label="Seleccionar fecha"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #pickerFecha></mat-datepicker>
+            @if (form.controls['fecha'].hasError('required') && form.controls['fecha'].touched) {
+              <mat-error>La fecha es obligatoria</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Categoria -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Categoria</mat-label>
+            <mat-select formControlName="categoria" aria-required="true">
+              @for (cat of categorias; track cat.valor) {
+                <mat-option [value]="cat.valor">
+                  <mat-icon aria-hidden="true">{{ cat.icono }}</mat-icon>
+                  {{ cat.etiqueta }}
+                </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix aria-hidden="true">category</mat-icon>
+            @if (form.controls['categoria'].hasError('required') && form.controls['categoria'].touched) {
+              <mat-error>Seleccione una categoria</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Monto -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Monto (USD)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="monto"
+              min="0.01"
+              step="0.01"
+              inputmode="decimal"
+              aria-required="true"
+            />
+            <span matPrefix>$</span>
+            @if (form.controls['monto'].hasError('required') && form.controls['monto'].touched) {
+              <mat-error>El monto es obligatorio</mat-error>
+            }
+            @if (form.controls['monto'].hasError('min') && form.controls['monto'].touched) {
+              <mat-error>El monto debe ser mayor a cero</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Descripcion -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Descripcion</mat-label>
+            <textarea
+              matInput
+              formControlName="descripcion"
+              rows="3"
+              placeholder="Ej: Compra de fertilizante urea 46%, 50kg"
+              maxlength="500"
+              aria-required="true"
+            ></textarea>
+            <mat-icon matPrefix aria-hidden="true">description</mat-icon>
+            @if (form.controls['descripcion'].hasError('required') && form.controls['descripcion'].touched) {
+              <mat-error>La descripcion es obligatoria</mat-error>
+            }
+            @if (form.controls['descripcion'].hasError('minlength') && form.controls['descripcion'].touched) {
+              <mat-error>Minimo 3 caracteres</mat-error>
+            }
+            @if (form.controls['descripcion'].hasError('maxlength')) {
+              <mat-error>Maximo 500 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Mensaje de error de guardado -->
+          @if (estadoGuardado().error) {
+            <div class="error-guardado" role="alert">
+              <mat-icon aria-hidden="true">error_outline</mat-icon>
+              <span>{{ estadoGuardado().error }}</span>
+            </div>
+          }
+
+          <!-- Botones de accion -->
+          <div class="acciones-formulario">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              class="btn-guardar"
+              [disabled]="estadoGuardado().guardando"
+              [attr.aria-label]="modoOffline() ? 'Guardar costo en modo offline' : 'Guardar costo'"
+            >
+              @if (estadoGuardado().guardando) {
+                <mat-spinner diameter="20" aria-hidden="true"></mat-spinner>
+                <span>Guardando...</span>
+              } @else if (modoOffline()) {
+                <ng-container>
+                  <mat-icon aria-hidden="true">cloud_off</mat-icon>
+                  <span>Guardar</span>
+                  <span class="badge-offline-btn" aria-hidden="true">OFFLINE</span>
+                </ng-container>
+              } @else {
+                <ng-container>
+                  <mat-icon aria-hidden="true">save</mat-icon>
+                  <span>Guardar Costo</span>
+                </ng-container>
+              }
+            </button>
+
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-cancelar"
+              (click)="cancelar()"
+              [disabled]="estadoGuardado().guardando"
+              aria-label="Cancelar y volver a la lista"
+            >
+              <mat-icon aria-hidden="true">arrow_back</mat-icon>
+              Cancelar
+            </button>
+          </div>
+
+        </form>
+
+      }
+    </mat-card-content>
+  </mat-card>
+
+</div>

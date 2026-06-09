@@ -1,0 +1,192 @@
+<!-- src/app/features/costos/pages/lista-costos/lista-costos.component.html -->
+<!-- Lista de costos con total acumulado reactivo y desglose por categoria. -->
+
+<div class="lista-container">
+
+  <app-offline-banner></app-offline-banner>
+
+  <!-- Header -->
+  <div class="lista-header">
+    <h1 class="lista-titulo">
+      <mat-icon aria-hidden="true">receipt_long</mat-icon>
+      Costos
+    </h1>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="irANuevoCosto()"
+      aria-label="Registrar nuevo costo"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Nuevo Costo
+    </button>
+  </div>
+
+  <!-- Selector de lote -->
+  @if (lotes().length > 0) {
+    <mat-form-field appearance="outline" class="selector-lote">
+      <mat-label>Lote</mat-label>
+      <mat-select
+        [value]="loteIdSeleccionado()"
+        (selectionChange)="onLoteChange($event.value)"
+        aria-label="Seleccionar lote"
+      >
+        @for (lote of lotes(); track lote.id) {
+          <mat-option [value]="lote.id">{{ lote.nombre }} — {{ lote.cultivo }}</mat-option>
+        }
+      </mat-select>
+      <mat-icon matPrefix aria-hidden="true">map</mat-icon>
+    </mat-form-field>
+  }
+
+  <!-- Cargando -->
+  @if (estadoLista() === 'cargando') {
+    <div class="estado-carga" role="status">
+      <mat-spinner diameter="36" aria-hidden="true"></mat-spinner>
+      <span>Cargando costos...</span>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (estadoLista() === 'error') {
+    <div class="estado-error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      <span>{{ errorMensaje() ?? 'Error al cargar los datos.' }}</span>
+    </div>
+  }
+
+  <!-- Sin datos -->
+  @if (estadoLista() === 'vacio') {
+    <div class="estado-vacio" role="status">
+      <mat-icon aria-hidden="true">savings</mat-icon>
+      <p>No hay costos registrados para este lote.</p>
+      <button mat-stroked-button color="primary" (click)="irANuevoCosto()">
+        <mat-icon aria-hidden="true">add</mat-icon>
+        Registrar primer costo
+      </button>
+    </div>
+  }
+
+  <!-- Exito: resumen + tabla -->
+  @if (estadoLista() === 'exito') {
+
+    <!-- KPI total acumulado -->
+    <mat-card class="kpi-total" role="region" aria-label="Total de costos acumulados">
+      <mat-card-content>
+        <div class="kpi-total__contenido">
+          <div class="kpi-total__info">
+            <span class="kpi-total__label">Total costos acumulados</span>
+            <span class="kpi-total__valor" aria-live="polite">
+              $ {{ totalCostos() | number:'1.2-2' }}
+            </span>
+            <span class="kpi-total__cantidad">{{ cantidadRegistros() }} registro(s)</span>
+          </div>
+          <mat-icon class="kpi-total__icono" aria-hidden="true">account_balance_wallet</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Desglose por categoria (panel expansible) -->
+    @if (desgloseCategoria().length > 0) {
+      <mat-expansion-panel class="desglose-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon aria-hidden="true">pie_chart</mat-icon>
+            Desglose por categoria
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="desglose-grid" role="list" aria-label="Desglose de costos por categoria">
+          @for (item of desgloseCategoria(); track item.categoria) {
+            <div class="desglose-item" role="listitem">
+              <div class="desglose-item__header">
+                <mat-icon class="desglose-item__icono" aria-hidden="true">{{ item.icono }}</mat-icon>
+                <span class="desglose-item__nombre">{{ item.etiqueta }}</span>
+                <span class="desglose-item__pct">{{ item.porcentaje | number:'1.0-0' }}%</span>
+              </div>
+              <div class="desglose-item__barra">
+                <div
+                  class="desglose-item__barra-fill"
+                  [style.width.%]="item.porcentaje"
+                  [attr.aria-label]="item.etiqueta + ': ' + (item.porcentaje | number:'1.0-0') + '%'"
+                ></div>
+              </div>
+              <span class="desglose-item__monto">$ {{ item.total | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+
+      </mat-expansion-panel>
+    }
+
+    <!-- Tabla de costos -->
+    <mat-card class="tabla-card">
+      <div class="tabla-wrapper" role="region" aria-label="Tabla de costos">
+        <table
+          mat-table
+          [dataSource]="costos()"
+          class="costos-table"
+          aria-label="Lista de costos registrados"
+        >
+
+          <!-- Fecha -->
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef scope="col">Fecha</th>
+            <td mat-cell *matCellDef="let costo">
+              {{ costo.fecha | date:'dd/MM/yyyy' }}
+            </td>
+          </ng-container>
+
+          <!-- Categoria -->
+          <ng-container matColumnDef="categoria">
+            <th mat-header-cell *matHeaderCellDef scope="col">Categoria</th>
+            <td mat-cell *matCellDef="let costo">
+              <div class="categoria-celda">
+                <mat-icon class="categoria-celda__icono" aria-hidden="true">
+                  {{ iconoCategoria(costo.categoria) }}
+                </mat-icon>
+                <span>{{ etiquetaCategoria(costo.categoria) }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Descripcion -->
+          <ng-container matColumnDef="descripcion">
+            <th mat-header-cell *matHeaderCellDef scope="col">Descripcion</th>
+            <td mat-cell *matCellDef="let costo" class="celda-descripcion">
+              {{ costo.descripcion }}
+            </td>
+          </ng-container>
+
+          <!-- Monto -->
+          <ng-container matColumnDef="monto">
+            <th mat-header-cell *matHeaderCellDef scope="col">Monto</th>
+            <td mat-cell *matCellDef="let costo">
+              <strong>$ {{ costo.monto | number:'1.2-2' }}</strong>
+            </td>
+          </ng-container>
+
+          <!-- Sync Status -->
+          <ng-container matColumnDef="syncStatus">
+            <th mat-header-cell *matHeaderCellDef scope="col">Sync</th>
+            <td mat-cell *matCellDef="let costo">
+              <mat-chip
+                [class]="claseSyncStatus(costo.syncStatus)"
+                [matTooltip]="etiquetaSyncStatus(costo.syncStatus)"
+                [attr.aria-label]="'Estado: ' + etiquetaSyncStatus(costo.syncStatus)"
+              >
+                {{ etiquetaSyncStatus(costo.syncStatus) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+
+        </table>
+      </div>
+    </mat-card>
+
+  }
+
+</div>

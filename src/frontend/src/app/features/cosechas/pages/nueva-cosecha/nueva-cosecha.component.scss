@@ -1,0 +1,270 @@
+// src/app/features/cosechas/pages/nueva-cosecha/nueva-cosecha.component.scss
+// Estilos mobile-first para registro de cosechas.
+// Alerta de carencia en rojo prominente para visibilidad en campo.
+
+$rojo-carencia:   #b71c1c;
+$rojo-fondo:      #ffebee;
+$rojo-borde:      #ef9a9a;
+$verde-primario:  #2e7d32;
+$verde-fondo:     #e8f5e9;
+$texto-secundario:#616161;
+$warning-color:   #e65100;
+$warning-fondo:   #fff3e0;
+
+// ----------------------------------------------------------------
+// Layout
+// ----------------------------------------------------------------
+.nueva-cosecha-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.form-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    color: $verde-primario;
+
+    mat-icon {
+      color: $verde-primario;
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// Estado de carga
+// ----------------------------------------------------------------
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+  color: $texto-secundario;
+  font-size: 14px;
+}
+
+// ----------------------------------------------------------------
+// Badge OFFLINE en el header
+// ----------------------------------------------------------------
+.badge-offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e65100;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+
+  &__icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+// ----------------------------------------------------------------
+// Alerta de carencia activa
+// ----------------------------------------------------------------
+.alerta-carencia {
+  background: $rojo-fondo;
+  border: 1px solid $rojo-borde;
+  border-left: 5px solid $rojo-carencia;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $rojo-carencia;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  &__icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: $rojo-carencia;
+    flex-shrink: 0;
+  }
+
+  &__detalle {
+    font-size: 13.5px;
+    color: darken($rojo-carencia, 5%);
+    margin: 0 0 8px;
+    line-height: 1.4;
+  }
+
+  &__nota {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12.5px;
+    color: $warning-color;
+    background: $warning-fondo;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: 0;
+    line-height: 1.4;
+
+    mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// Campo del formulario
+// ----------------------------------------------------------------
+.full-width {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+// ----------------------------------------------------------------
+// Ingreso estimado
+// ----------------------------------------------------------------
+.ingreso-estimado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: $verde-fondo;
+  border: 1px solid lighten($verde-primario, 40%);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: $verde-primario;
+
+  mat-icon {
+    color: $verde-primario;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  strong {
+    font-size: 16px;
+  }
+}
+
+// ----------------------------------------------------------------
+// Error de guardado
+// ----------------------------------------------------------------
+.error-guardado {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: $rojo-fondo;
+  border: 1px solid $rojo-borde;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  color: $rojo-carencia;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+// ----------------------------------------------------------------
+// Botones de accion
+// ----------------------------------------------------------------
+.acciones-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-guardar {
+  min-height: 52px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  mat-spinner {
+    display: inline-block;
+    ::ng-deep circle {
+      stroke: rgba(255, 255, 255, 0.85);
+    }
+  }
+}
+
+.btn-cancelar {
+  min-height: 44px;
+  border-radius: 8px;
+  color: $texto-secundario;
+}
+
+// Badge OFFLINE dentro del boton guardar
+.badge-offline-btn {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 1px 6px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
+// ----------------------------------------------------------------
+// Snackbars
+// ----------------------------------------------------------------
+::ng-deep .snack-offline {
+  --mdc-snackbar-container-color: #e65100;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+::ng-deep .snack-exito {
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+// ----------------------------------------------------------------
+// Responsive: tablet+
+// ----------------------------------------------------------------
+@media (min-width: 600px) {
+  .nueva-cosecha-container {
+    padding: 24px;
+  }
+
+  .acciones-formulario {
+    flex-direction: row;
+
+    .btn-guardar {
+      flex: 1;
+    }
+
+    .btn-cancelar {
+      flex: 0 0 auto;
+      min-width: 120px;
+    }
+  }
+}

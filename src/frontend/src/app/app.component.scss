@@ -1,0 +1,316 @@
+// src/app/app.component.scss
+// Estilos del shell principal: header, barra de navegacion inferior, layout.
+// Mobile-first: la barra inferior es el patron de navegacion primario.
+
+// -------------------------------------------------------------------------
+// Variables de diseno
+// -------------------------------------------------------------------------
+
+$header-height: 56px;
+$nav-bottom-height: 60px;
+$verde-agricola: #2e7d32;
+$verde-claro: #4caf50;
+
+// -------------------------------------------------------------------------
+// Reset global y fuente
+// -------------------------------------------------------------------------
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+// -------------------------------------------------------------------------
+// Header
+// -------------------------------------------------------------------------
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: $header-height;
+  background-color: $verde-agricola !important;
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #fff;
+  }
+
+  &__logo {
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+    color: #a5d6a7;
+  }
+
+  &__nombre {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+  }
+
+  &__espaciador {
+    flex: 1;
+  }
+
+  // Indicador de conectividad
+  &__conectividad {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+
+    &--online {
+      background-color: rgba(76, 175, 80, 0.3);
+      color: #c8e6c9;
+
+      .app-header__conectividad-dot {
+        background-color: #69f0ae;
+        box-shadow: 0 0 6px #69f0ae;
+      }
+    }
+
+    &--offline {
+      background-color: rgba(244, 67, 54, 0.3);
+      color: #ffcdd2;
+
+      .app-header__conectividad-dot {
+        background-color: #ff5252;
+      }
+    }
+
+    // Ocultar texto en moviles muy pequenos
+    @media (max-width: 360px) {
+      .app-header__conectividad-texto {
+        display: none;
+      }
+    }
+  }
+
+  &__conectividad-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background-color 0.3s ease;
+  }
+
+  &__sync-btn {
+    color: #fff !important;
+    position: relative;
+
+    .mat-icon {
+      animation: rotar 1.5s linear infinite;
+    }
+  }
+}
+
+@keyframes rotar {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+// -------------------------------------------------------------------------
+// Contenido principal
+// -------------------------------------------------------------------------
+
+.app-contenido {
+  flex: 1;
+  overflow-y: auto;
+  // Sin padding extra — cada feature maneja su propio padding
+  background-color: #f5f5f5;
+
+  // Reservar espacio para la barra inferior cuando el usuario esta autenticado
+  &--con-nav {
+    padding-bottom: $nav-bottom-height;
+  }
+}
+
+// -------------------------------------------------------------------------
+// Barra de navegacion inferior (bottom nav — patron mobile-first)
+// -------------------------------------------------------------------------
+
+.app-nav-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: $nav-bottom-height;
+  background-color: #fff;
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid #e0e0e0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  // Safe area para dispositivos con notch o barra de inicio en iOS
+  padding-bottom: env(safe-area-inset-bottom, 0);
+
+  &__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    text-decoration: none;
+    color: #757575;
+    transition: color 0.2s ease, background-color 0.2s ease;
+    border-radius: 0;
+    padding: 6px 4px;
+    // Area de toque minima para dedos en campo (44px minimo recomendado)
+    min-height: 44px;
+
+    &:hover,
+    &:focus-visible {
+      background-color: #f5f5f5;
+      color: $verde-agricola;
+      outline: 2px solid $verde-agricola;
+      outline-offset: -2px;
+    }
+
+    &--activo {
+      color: $verde-agricola !important;
+
+      .app-nav-bottom__icono {
+        // Icono ligeramente mas grande cuando esta activo
+        font-size: 26px;
+        height: 26px;
+        width: 26px;
+      }
+
+      .app-nav-bottom__etiqueta {
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__icono {
+    font-size: 24px;
+    height: 24px;
+    width: 24px;
+    transition: font-size 0.15s ease;
+  }
+
+  &__etiqueta {
+    font-size: 0.65rem;
+    font-weight: 400;
+    text-align: center;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 64px;
+  }
+}
+
+// -------------------------------------------------------------------------
+// Estilos globales para SnackBar de sync
+// -------------------------------------------------------------------------
+
+// Estos estilos deben estar a nivel global (no encapsulados) porque
+// MatSnackBar se renderiza fuera del arbol del componente.
+// Se definen aqui como :global si se usa ViewEncapsulation.None,
+// o en styles.scss. Duplicamos aqui con ::ng-deep como alternativa.
+::ng-deep .snack-sync-exito {
+  background-color: #2e7d32 !important;
+  color: #fff !important;
+
+  .mat-mdc-button {
+    color: #a5d6a7 !important;
+  }
+}
+
+::ng-deep .snack-offline {
+  background-color: #f59e0b !important;
+  color: #fff !important;
+}
+
+::ng-deep .snack-exito {
+  background-color: #1565c0 !important;
+  color: #fff !important;
+}
+
+// -------------------------------------------------------------------------
+// Desktop: mostrar nav lateral en lugar de inferior (>= 768px)
+// -------------------------------------------------------------------------
+
+@media (min-width: 768px) {
+  .app-header {
+    height: 64px;
+
+    &__nombre {
+      font-size: 1.4rem;
+    }
+  }
+
+  // En tablets y desktop: la nav inferior se convierte en nav lateral
+  .app-nav-bottom {
+    position: fixed;
+    top: 64px;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    height: auto;
+    width: 72px;
+    flex-direction: column;
+    border-top: none;
+    border-right: 1px solid #e0e0e0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+    padding-bottom: 0;
+
+    &__item {
+      height: 72px;
+      flex: 0 0 72px;
+    }
+
+    &__etiqueta {
+      font-size: 0.6rem;
+      max-width: 64px;
+    }
+  }
+
+  // Desplazar el contenido principal a la derecha del nav lateral
+  .app-contenido--con-nav {
+    padding-bottom: 0;
+    margin-left: 72px;
+  }
+}
+
+@media (min-width: 1024px) {
+  // En desktop: nav lateral mas ancho con etiquetas visibles
+  .app-nav-bottom {
+    width: 200px;
+    flex-direction: column;
+
+    &__item {
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 12px;
+      padding: 0 16px;
+      height: 56px;
+      flex: 0 0 56px;
+    }
+
+    &__etiqueta {
+      font-size: 0.875rem;
+      max-width: none;
+    }
+  }
+
+  .app-contenido--con-nav {
+    margin-left: 200px;
+  }
+}

@@ -1,0 +1,351 @@
+// src/app/features/auth/pages/login/login.component.scss
+// Tema verde agricola. Mobile-first: diseñado para agricultores en campo
+// con pantallas de 360px+. Botones grandes (min 48px) para facilidad de uso.
+
+// ----------------------------------------------------------------
+// Variables del tema agricola
+// ----------------------------------------------------------------
+$verde-primario:   #2e7d32;   // Material Green 800
+$verde-claro:      #4caf50;   // Material Green 500
+$verde-oscuro:     #1b5e20;   // Material Green 900
+$verde-fondo:      #e8f5e9;   // Material Green 50
+$verde-acento:     #66bb6a;   // Material Green 400
+$texto-primario:   #212121;
+$texto-secundario: #616161;
+$error-color:      #c62828;
+$error-fondo:      #ffebee;
+
+// ----------------------------------------------------------------
+// Layout principal
+// ----------------------------------------------------------------
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;             // dvh para mobile con barra de navegacion
+  background: linear-gradient(
+    160deg,
+    $verde-fondo 0%,
+    darken($verde-fondo, 4%) 100%
+  );
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10),
+              0 1px 6px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+// ----------------------------------------------------------------
+// Header: logo + titulo
+// ----------------------------------------------------------------
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.logo-wrapper {
+  width: 72px;
+  height: 72px;
+  background: $verde-primario;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.35);
+}
+
+.logo-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: #ffffff;
+}
+
+.app-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: $verde-oscuro;
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+
+.app-subtitle {
+  font-size: 14px;
+  color: $texto-secundario;
+  margin: 0;
+}
+
+// ----------------------------------------------------------------
+// Banner de error global
+// ----------------------------------------------------------------
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: $error-fondo;
+  border: 1px solid lighten($error-color, 30%);
+  border-left: 4px solid $error-color;
+  border-radius: 8px;
+  padding: 12px 12px 12px 14px;
+  margin-bottom: 20px;
+
+  &__icon {
+    color: $error-color;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  &__text {
+    flex: 1;
+    font-size: 13.5px;
+    color: $error-color;
+    line-height: 1.4;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    color: $error-color;
+  }
+}
+
+// ----------------------------------------------------------------
+// Seccion Passkeys
+// ----------------------------------------------------------------
+.passkey-section {
+  margin-bottom: 8px;
+}
+
+// ----------------------------------------------------------------
+// Separador "— o —"
+// ----------------------------------------------------------------
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+
+  &__line {
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+  }
+
+  &__text {
+    font-size: 13px;
+    color: $texto-secundario;
+    flex-shrink: 0;
+    padding: 0 4px;
+  }
+}
+
+// ----------------------------------------------------------------
+// Botones
+// ----------------------------------------------------------------
+.full-width {
+  width: 100%;
+}
+
+// Boton principal Passkey: grande, verde, con icono
+.btn-passkey {
+  min-height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  border-radius: 10px;
+  margin-top: 4px;
+
+  mat-icon {
+    margin-right: 8px;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.btn-submit {
+  min-height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-top: 4px;
+
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+.btn-registrar-passkey {
+  min-height: 52px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-top: 4px;
+
+  mat-icon {
+    margin-right: 8px;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.btn-secundario {
+  min-height: 44px;
+  margin-top: 8px;
+  color: $texto-secundario;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.btn-registrar {
+  min-height: 44px;
+  margin-top: 8px;
+  color: $verde-primario;
+  font-size: 14px;
+  border-radius: 8px;
+
+  mat-icon {
+    margin-right: 6px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Spinner dentro de botones
+.btn-spinner {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+
+  // Color blanco para spinners en botones primarios
+  ::ng-deep circle {
+    stroke: rgba(255, 255, 255, 0.85);
+  }
+}
+
+// ----------------------------------------------------------------
+// Acciones secundarias
+// ----------------------------------------------------------------
+.acciones-secundarias {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 4px;
+}
+
+// ----------------------------------------------------------------
+// Instruccion de registro
+// ----------------------------------------------------------------
+.registro-instruccion {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: $texto-secundario;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.instruccion-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: $verde-primario;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+// ----------------------------------------------------------------
+// Footer
+// ----------------------------------------------------------------
+.login-footer {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  text-align: center;
+  font-size: 11.5px;
+  color: lighten($texto-secundario, 20%);
+}
+
+// ----------------------------------------------------------------
+// Overrides Angular Material para tema verde
+// ----------------------------------------------------------------
+
+// Form fields con tema verde en focus
+::ng-deep .mat-mdc-form-field.mat-focused {
+  .mat-mdc-floating-label {
+    color: $verde-primario !important;
+  }
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: $verde-primario !important;
+    border-width: 2px !important;
+  }
+}
+
+// Icono prefijo
+::ng-deep .mat-mdc-form-field .mat-mdc-form-field-icon-prefix {
+  color: $texto-secundario;
+  padding-right: 4px;
+}
+
+// Snackbar de exito
+::ng-deep .snack-exito {
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+// ----------------------------------------------------------------
+// Responsive: tablets y desktop
+// ----------------------------------------------------------------
+@media (min-width: 600px) {
+  .login-card {
+    padding: 40px 40px;
+    border-radius: 20px;
+  }
+
+  .logo-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  .logo-icon {
+    font-size: 46px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .app-title {
+    font-size: 32px;
+  }
+
+  .app-subtitle {
+    font-size: 15px;
+  }
+}

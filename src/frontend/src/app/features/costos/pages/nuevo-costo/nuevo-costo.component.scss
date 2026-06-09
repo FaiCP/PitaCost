@@ -1,0 +1,188 @@
+// src/app/features/costos/pages/nuevo-costo/nuevo-costo.component.scss
+// Mobile-first. Patron de estilos consistente con nueva-cosecha.
+
+$verde-primario:   #2e7d32;
+$rojo-error:       #b71c1c;
+$rojo-fondo:       #ffebee;
+$texto-secundario: #616161;
+
+.nuevo-costo-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.form-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    color: $verde-primario;
+
+    mat-icon { color: $verde-primario; }
+  }
+
+  mat-card-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+}
+
+// ----------------------------------------------------------------
+// Badges
+// ----------------------------------------------------------------
+.badge-offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e65100;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+
+  &__icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.badge-pendientes {
+  display: inline-flex;
+  align-items: center;
+  background: #fff3e0;
+  color: #e65100;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #ffcc80;
+}
+
+// ----------------------------------------------------------------
+// Loading
+// ----------------------------------------------------------------
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+  color: $texto-secundario;
+  font-size: 14px;
+}
+
+// ----------------------------------------------------------------
+// Formulario
+// ----------------------------------------------------------------
+.full-width {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+// ----------------------------------------------------------------
+// Error
+// ----------------------------------------------------------------
+.error-guardado {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: $rojo-fondo;
+  border: 1px solid #ef9a9a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  color: $rojo-error;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+// ----------------------------------------------------------------
+// Botones
+// ----------------------------------------------------------------
+.acciones-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-guardar {
+  min-height: 52px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  mat-spinner {
+    ::ng-deep circle {
+      stroke: rgba(255, 255, 255, 0.85);
+    }
+  }
+}
+
+.btn-cancelar {
+  min-height: 44px;
+  border-radius: 8px;
+  color: $texto-secundario;
+}
+
+.badge-offline-btn {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 1px 6px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
+// ----------------------------------------------------------------
+// Snackbars globales
+// ----------------------------------------------------------------
+::ng-deep .snack-offline {
+  --mdc-snackbar-container-color: #e65100;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+::ng-deep .snack-exito {
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+}
+
+// ----------------------------------------------------------------
+// Responsive
+// ----------------------------------------------------------------
+@media (min-width: 600px) {
+  .nuevo-costo-container {
+    padding: 24px;
+  }
+
+  .acciones-formulario {
+    flex-direction: row;
+
+    .btn-guardar { flex: 1; }
+    .btn-cancelar { flex: 0 0 auto; min-width: 120px; }
+  }
+}

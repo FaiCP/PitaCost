@@ -1,0 +1,215 @@
+<!-- src/app/features/auth/pages/login/login.component.html -->
+<div class="login-container" role="main">
+  <div class="login-card">
+
+    <!-- Logo y branding -->
+    <header class="login-header" aria-label="PitaSmart">
+      <div class="logo-wrapper" aria-hidden="true">
+        <mat-icon class="logo-icon" fontIcon="agriculture"></mat-icon>
+      </div>
+      <h1 class="app-title">PitaSmart</h1>
+      <p class="app-subtitle">Gestiona tus cultivos con inteligencia</p>
+    </header>
+
+    <!-- Mensaje de error global -->
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert" aria-live="assertive">
+        <mat-icon class="error-banner__icon" aria-hidden="true">error_outline</mat-icon>
+        <span class="error-banner__text">{{ errorMessage() }}</span>
+        <button mat-icon-button class="error-banner__close" (click)="limpiarError()" aria-label="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- LOGIN con email + contraseña (flujo principal)                      -->
+    <!-- ------------------------------------------------------------------ -->
+    @if (modoFormulario() === 'login') {
+      <section aria-label="Iniciar sesion">
+        <form [formGroup]="loginForm" (ngSubmit)="loginConPassword()" novalidate>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Correo electronico</mat-label>
+            <input matInput type="email" formControlName="email"
+                   autocomplete="email" inputmode="email" aria-required="true" />
+            <mat-icon matPrefix aria-hidden="true">email</mat-icon>
+            @if (loginForm.controls.email.hasError('required') && loginForm.controls.email.touched) {
+              <mat-error>El correo es obligatorio</mat-error>
+            }
+            @if (loginForm.controls.email.hasError('email') && loginForm.controls.email.touched) {
+              <mat-error>Ingrese un correo valido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input matInput [type]="mostrarPassword() ? 'text' : 'password'"
+                   formControlName="password" autocomplete="current-password" aria-required="true" />
+            <mat-icon matPrefix aria-hidden="true">lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="toggleMostrarPassword()"
+                    [attr.aria-label]="mostrarPassword() ? 'Ocultar' : 'Mostrar'">
+              <mat-icon>{{ mostrarPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (loginForm.controls.password.hasError('required') && loginForm.controls.password.touched) {
+              <mat-error>La contraseña es obligatoria</mat-error>
+            }
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit"
+                  class="btn-submit full-width" [disabled]="isLoading()">
+            @if (isLoading()) {
+              <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+              <span>Ingresando...</span>
+            } @else {
+              <mat-icon>login</mat-icon>
+              <span>Ingresar</span>
+            }
+          </button>
+        </form>
+
+        <div class="separator" role="separator" aria-hidden="true">
+          <span class="separator__line"></span>
+          <span class="separator__text">¿No tienes cuenta?</span>
+          <span class="separator__line"></span>
+        </div>
+
+        <button mat-stroked-button type="button" class="full-width" (click)="irARegistro()">
+          <mat-icon>person_add</mat-icon>
+          <span>Crear cuenta nueva</span>
+        </button>
+
+        @if (supportsPasskeys()) {
+          <button mat-button type="button" class="btn-passkey-alt full-width"
+                  (click)="mostrarFormularioRegistro()">
+            <mat-icon>fingerprint</mat-icon>
+            <span>Usar huella / Face ID</span>
+          </button>
+        }
+      </section>
+    }
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- REGISTRO con email + nombre + contraseña                            -->
+    <!-- ------------------------------------------------------------------ -->
+    @if (modoFormulario() === 'registro') {
+      <section aria-label="Crear cuenta">
+        <h2 class="form-titulo">Crear cuenta</h2>
+        <form [formGroup]="registroForm" (ngSubmit)="registrarConPassword()" novalidate>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nombre completo</mat-label>
+            <input matInput type="text" formControlName="nombreCompleto"
+                   autocomplete="name" aria-required="true" />
+            <mat-icon matPrefix aria-hidden="true">person</mat-icon>
+            @if (registroForm.controls.nombreCompleto.hasError('required') && registroForm.controls.nombreCompleto.touched) {
+              <mat-error>El nombre es obligatorio</mat-error>
+            }
+            @if (registroForm.controls.nombreCompleto.hasError('minlength') && registroForm.controls.nombreCompleto.touched) {
+              <mat-error>Minimo 3 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Correo electronico</mat-label>
+            <input matInput type="email" formControlName="email"
+                   autocomplete="email" inputmode="email" aria-required="true" />
+            <mat-icon matPrefix aria-hidden="true">email</mat-icon>
+            @if (registroForm.controls.email.hasError('required') && registroForm.controls.email.touched) {
+              <mat-error>El correo es obligatorio</mat-error>
+            }
+            @if (registroForm.controls.email.hasError('email') && registroForm.controls.email.touched) {
+              <mat-error>Ingrese un correo valido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input matInput [type]="mostrarPassword() ? 'text' : 'password'"
+                   formControlName="password" autocomplete="new-password" aria-required="true" />
+            <mat-icon matPrefix aria-hidden="true">lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="toggleMostrarPassword()"
+                    [attr.aria-label]="mostrarPassword() ? 'Ocultar' : 'Mostrar'">
+              <mat-icon>{{ mostrarPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (registroForm.controls.password.hasError('required') && registroForm.controls.password.touched) {
+              <mat-error>La contraseña es obligatoria</mat-error>
+            }
+            @if (registroForm.controls.password.hasError('minlength') && registroForm.controls.password.touched) {
+              <mat-error>Minimo 6 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit"
+                  class="btn-submit full-width" [disabled]="isLoading()">
+            @if (isLoading()) {
+              <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+              <span>Creando cuenta...</span>
+            } @else {
+              <mat-icon>person_add</mat-icon>
+              <span>Crear cuenta</span>
+            }
+          </button>
+
+          <button mat-button type="button" class="full-width" style="margin-top:8px"
+                  (click)="irALogin()">
+            Ya tengo cuenta — Ingresar
+          </button>
+        </form>
+      </section>
+    }
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- REGISTRO PASSKEY (opcional / secundario)                            -->
+    <!-- ------------------------------------------------------------------ -->
+    @if (modoFormulario() === 'registro_passkey') {
+      <section aria-label="Registro de huella digital">
+        <p class="registro-instruccion">
+          <mat-icon aria-hidden="true" class="instruccion-icon">info</mat-icon>
+          Ingrese su correo para registrar su huella o Face ID en este dispositivo.
+        </p>
+        <form [formGroup]="passkeyForm" (ngSubmit)="registrarPasskey()" novalidate>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Correo electronico</mat-label>
+            <input matInput type="email" formControlName="email"
+                   autocomplete="email" inputmode="email" aria-required="true" />
+            <mat-icon matPrefix aria-hidden="true">email</mat-icon>
+          </mat-form-field>
+
+          <button mat-raised-button color="accent" type="submit"
+                  class="full-width" [disabled]="isLoading()">
+            @if (isLoading()) {
+              <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+              <span>Registrando...</span>
+            } @else {
+              <mat-icon>fingerprint</mat-icon>
+              <span>Registrar huella / Face ID</span>
+            }
+          </button>
+
+          <button mat-button type="button" class="full-width" style="margin-top:8px"
+                  (click)="irALogin()">
+            Cancelar
+          </button>
+        </form>
+      </section>
+    }
+
+    <!-- DEV LOGIN — solo en desarrollo -->
+    @if (isDevMode) {
+      <div class="dev-login-panel">
+        <p class="dev-login-label">&#9881; Acceso rapido (solo DEV)</p>
+        <button mat-flat-button type="button" class="full-width" [disabled]="isLoading()"
+                style="background:#e65100;color:#fff;margin-top:4px"
+                (click)="devLogin('agricultor@pitasmart.dev')">
+          Entrar como Carlos Andrade (agricultor&#64;pitasmart.dev)
+        </button>
+      </div>
+    }
+
+    <footer class="login-footer" aria-label="Version de la aplicacion">
+      <span>PitaSmart v1.0 — Agrocalidad Ecuador</span>
+    </footer>
+
+  </div>
+</div>

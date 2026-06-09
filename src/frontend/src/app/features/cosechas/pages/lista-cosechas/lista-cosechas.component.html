@@ -1,0 +1,187 @@
+<!-- src/app/features/cosechas/pages/lista-cosechas/lista-cosechas.component.html -->
+<!-- Lista de cosechas con selector de lote, KPIs de resumen y tabla de registros. -->
+
+<div class="lista-container">
+
+  <app-offline-banner></app-offline-banner>
+
+  <!-- Header con titulo y boton nueva cosecha -->
+  <div class="lista-header">
+    <h1 class="lista-titulo">
+      <mat-icon aria-hidden="true">grass</mat-icon>
+      Cosechas
+    </h1>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="irANuevaCosecha()"
+      aria-label="Registrar nueva cosecha"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Nueva Cosecha
+    </button>
+  </div>
+
+  <!-- Selector de lote -->
+  @if (lotes().length > 0) {
+    <mat-form-field appearance="outline" class="selector-lote">
+      <mat-label>Lote</mat-label>
+      <mat-select
+        [value]="loteIdSeleccionado()"
+        (selectionChange)="onLoteChange($event.value)"
+        aria-label="Seleccionar lote"
+      >
+        @for (lote of lotes(); track lote.id) {
+          <mat-option [value]="lote.id">
+            {{ lote.nombre }} — {{ lote.cultivo }}
+          </mat-option>
+        }
+      </mat-select>
+      <mat-icon matPrefix aria-hidden="true">map</mat-icon>
+    </mat-form-field>
+  }
+
+  <!-- Estado: cargando -->
+  @if (estadoLista() === 'cargando') {
+    <div class="estado-carga" role="status" aria-label="Cargando cosechas">
+      <mat-spinner diameter="36" aria-hidden="true"></mat-spinner>
+      <span>Cargando cosechas...</span>
+    </div>
+  }
+
+  <!-- Estado: error -->
+  @if (estadoLista() === 'error') {
+    <div class="estado-error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      <span>{{ errorMensaje() ?? 'Error al cargar los datos.' }}</span>
+    </div>
+  }
+
+  <!-- Estado: sin datos -->
+  @if (estadoLista() === 'vacio') {
+    <div class="estado-vacio" role="status">
+      <mat-icon aria-hidden="true">hourglass_empty</mat-icon>
+      <p>No hay cosechas registradas para este lote.</p>
+      <button mat-stroked-button color="primary" (click)="irANuevaCosecha()">
+        <mat-icon aria-hidden="true">add</mat-icon>
+        Registrar primera cosecha
+      </button>
+    </div>
+  }
+
+  <!-- Estado: exito — KPIs + tabla -->
+  @if (estadoLista() === 'exito') {
+
+    <!-- KPIs de resumen -->
+    <div class="kpis-grid" role="region" aria-label="Resumen de cosechas">
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <span class="kpi-label">Total cosechado</span>
+          <span class="kpi-valor">{{ totalKg() | number:'1.1-1' }} kg</span>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <span class="kpi-label">Ingresos totales</span>
+          <span class="kpi-valor">$ {{ totalIngresos() | number:'1.2-2' }}</span>
+        </mat-card-content>
+      </mat-card>
+
+      @if (precioPromedio() !== null) {
+        <mat-card class="kpi-card">
+          <mat-card-content>
+            <span class="kpi-label">Precio promedio/kg</span>
+            <span class="kpi-valor">$ {{ precioPromedio() | number:'1.2-2' }}</span>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <!-- Tabla de cosechas -->
+    <mat-card class="tabla-card">
+      <div class="tabla-wrapper" role="region" aria-label="Tabla de cosechas">
+        <table
+          mat-table
+          [dataSource]="cosechas()"
+          class="cosechas-table"
+          aria-label="Lista de cosechas registradas"
+        >
+
+          <!-- Columna: Fecha -->
+          <ng-container matColumnDef="fechaCosecha">
+            <th mat-header-cell *matHeaderCellDef scope="col">Fecha</th>
+            <td mat-cell *matCellDef="let cosecha">
+              {{ cosecha.fechaCosecha | date:'dd/MM/yyyy' }}
+            </td>
+          </ng-container>
+
+          <!-- Columna: Peso -->
+          <ng-container matColumnDef="pesoTotalKg">
+            <th mat-header-cell *matHeaderCellDef scope="col">Peso (kg)</th>
+            <td mat-cell *matCellDef="let cosecha">
+              {{ cosecha.pesoTotalKg | number:'1.1-1' }}
+            </td>
+          </ng-container>
+
+          <!-- Columna: Calidad -->
+          <ng-container matColumnDef="calidad">
+            <th mat-header-cell *matHeaderCellDef scope="col">Calidad</th>
+            <td mat-cell *matCellDef="let cosecha">
+              {{ etiquetaCalidad(cosecha.calidad) }}
+            </td>
+          </ng-container>
+
+          <!-- Columna: Precio/kg -->
+          <ng-container matColumnDef="precioVentaKg">
+            <th mat-header-cell *matHeaderCellDef scope="col">Precio/kg</th>
+            <td mat-cell *matCellDef="let cosecha">
+              @if (cosecha.precioVentaKg) {
+                $ {{ cosecha.precioVentaKg | number:'1.2-2' }}
+              } @else {
+                <span class="sin-dato" aria-label="Sin precio registrado">—</span>
+              }
+            </td>
+          </ng-container>
+
+          <!-- Columna: Ingreso total -->
+          <ng-container matColumnDef="ingresoTotal">
+            <th mat-header-cell *matHeaderCellDef scope="col">Ingreso Total</th>
+            <td mat-cell *matCellDef="let cosecha">
+              @if (cosecha.ingresoTotal > 0) {
+                <strong>$ {{ cosecha.ingresoTotal | number:'1.2-2' }}</strong>
+              } @else {
+                <span class="sin-dato" aria-label="Ingreso no calculado">—</span>
+              }
+            </td>
+          </ng-container>
+
+          <!-- Columna: Estado sync -->
+          <ng-container matColumnDef="syncStatus">
+            <th mat-header-cell *matHeaderCellDef scope="col">Sync</th>
+            <td mat-cell *matCellDef="let cosecha">
+              <mat-chip
+                [class]="claseSyncStatus(cosecha.syncStatus)"
+                [matTooltip]="etiquetaSyncStatus(cosecha.syncStatus)"
+                aria-label="Estado de sincronizacion: {{ etiquetaSyncStatus(cosecha.syncStatus) }}"
+              >
+                {{ etiquetaSyncStatus(cosecha.syncStatus) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: columnas;"
+            [class.fila-bloqueada]="row.bloqueadaPorCarencia"
+            [matTooltip]="row.bloqueadaPorCarencia ? 'Cosecha con carencia activa al momento del registro' : ''"
+          ></tr>
+
+        </table>
+      </div>
+    </mat-card>
+
+  }
+
+</div>

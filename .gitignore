@@ -1,0 +1,62 @@
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.userprefs
+*.sln.docstates
+.DotSettings
+.DotSettings.user
+packages/
+.nuget/NuGet.Config
+.nuget/packages/
+*.ncrunchproject
+*.ncrunchsolution
+
+# Angular
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+.angular/cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+.AppleDouble
+.LSOverride
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Build & Dist
+build/
+release/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE specifics
+.vs/
+.vscode/settings.json
+.vscode/launch.json
+
+# Misc
+.cache/
+temp/
+tmp/
+*.bak
+*.orig

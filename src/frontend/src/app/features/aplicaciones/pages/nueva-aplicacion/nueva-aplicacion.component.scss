@@ -1,0 +1,236 @@
+// src/app/features/aplicaciones/pages/nueva-aplicacion/nueva-aplicacion.component.scss
+// Estilos BEM. Mobile-first: inputs y botones grandes para uso en campo.
+
+.nueva-aplicacion {
+
+  &__container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 16px 96px; // 96px de padding inferior para barra de navegacion
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 0 8px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+  }
+
+  &__titulo {
+    flex: 1;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: #1a237e;
+  }
+
+  &__offline-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff3e0;
+    border: 1px solid #f57c00;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    color: #e65100;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 48px 16px;
+    color: #666;
+
+    p { margin: 0; }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__seccion {
+    border-radius: 12px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      color: #303f9f;
+    }
+  }
+
+  &__campo {
+    width: 100%;
+
+    // Inputs grandes para uso en campo con guantes
+    ::ng-deep .mat-mdc-form-field-flex {
+      min-height: 56px;
+    }
+
+    ::ng-deep input.mat-mdc-input-element {
+      font-size: 1rem;
+    }
+  }
+
+  &__dosis-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__campo--dosis {
+    flex: 2;
+    min-width: 120px;
+  }
+
+  &__campo--unidad {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  &__alerta-carencia {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff8e1;
+    border: 2px solid #f9a825;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    color: #f57f17;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    strong {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+  }
+
+  &__alerta-fecha {
+    margin-top: 4px !important;
+    font-size: 0.8rem !important;
+    color: #e65100;
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffebee;
+    border: 1px solid #ef5350;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #c62828;
+    font-size: 0.875rem;
+
+    mat-icon {
+      flex-shrink: 0;
+    }
+  }
+
+  &__insumo-meta {
+    font-size: 0.75rem;
+    color: #666;
+    margin-left: 4px;
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0 16px;
+  }
+
+  &__chip-offline {
+    background-color: #fff3e0 !important;
+    color: #e65100 !important;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border: 1px solid #ffb74d !important;
+    justify-content: center;
+  }
+
+  &__btn {
+    // Botones grandes para uso en campo
+    height: 52px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+
+    &--guardar {
+      background-color: #1a237e !important;
+      color: white !important;
+
+      &:disabled {
+        opacity: 0.6;
+      }
+    }
+
+    &--cancelar {
+      border-color: #bbb !important;
+    }
+  }
+}
+
+// Estilos globales de snackbar (no pueden ser :host-scoped)
+:global(.snack-offline) {
+  background: #e65100 !important;
+  color: white !important;
+}
+
+:global(.snack-exito) {
+  background: #2e7d32 !important;
+  color: white !important;
+}
+
+// Responsive: tablet y desktop
+@media (min-width: 600px) {
+  .nueva-aplicacion {
+    &__container {
+      padding: 0 24px 96px;
+    }
+
+    &__acciones {
+      flex-direction: row;
+      justify-content: flex-end;
+
+      .nueva-aplicacion__btn {
+        width: auto;
+        min-width: 160px;
+      }
+    }
+  }
+}
